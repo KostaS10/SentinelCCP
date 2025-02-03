@@ -588,7 +588,7 @@
                             }
                         },
                         {
-                            "name": "[[concat(parameters('workspace1'),'/Microsoft.SecurityInsights/', 'AtlassianJira', uniqueString(parameters('jiraorganizationurl')))]",
+                            "name": "[[concat(parameters('workspace-template'),'/Microsoft.SecurityInsights/', 'AtlassianJira', uniqueString(parameters('jiraorganizationurl')))]",
                             "apiVersion": "2022-12-01-preview",
                             "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
                             "location": "[parameters('workspace-location')]",
