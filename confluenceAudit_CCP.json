@@ -128,7 +128,7 @@
                                             },
                                             {
                                                 "name": "creationDate",
-                                                "type": "int"
+                                                "type": "long"
                                             },
                                             {
                                                 "name": "summary",
@@ -218,7 +218,7 @@
                                         },
                                         {
                                             "name": "CreationDate",
-                                            "type": "int",
+                                            "type": "long",
                                             "isDefaultDisplay": false,
                                             "isHidden": false
                                         },
