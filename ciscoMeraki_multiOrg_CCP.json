@@ -47,14 +47,14 @@
       "email": "support@microsoft.com",
       "_email": "[variables('email')]",
       "_solutionName": "Cisco Meraki Events via REST API",
-      "_solutionVersion": "3.0.2",
-      "solutionId": "azuresentinel.azure-sentinel-solution-ciscomerakinativepoller",
+      "_solutionVersion": "3.0.3",
+      "solutionId": "azuresentinel.azure-sentinel-solution-ciscomerakinativepollerMultiOrg",
       "_solutionId": "[variables('solutionId')]",
       "workspaceResourceId": "[resourceId('microsoft.OperationalInsights/Workspaces', parameters('workspace'))]",
       "dataConnectorCCPVersion": "1.0.0",
-      "_dataConnectorContentIdConnectorDefinition1": "CiscoMerakiMultiRule",
+      "_dataConnectorContentIdConnectorDefinition1": "ciscoMerakiMultiRuleMO",
       "dataConnectorTemplateNameConnectorDefinition1": "[concat(parameters('workspace'),'-dc-',uniquestring(variables('_dataConnectorContentIdConnectorDefinition1')))]",
-      "_dataConnectorContentIdConnections1": "CiscoMerakiMultiRuleConnections",
+      "_dataConnectorContentIdConnections1": "ciscoMerakiMultiConnectionsMO",
       "dataConnectorTemplateNameConnections1": "[concat(parameters('workspace'),'-dc-',uniquestring(variables('_dataConnectorContentIdConnections1')))]",
       "dataCollectionEndpointId1": "[concat('/subscriptions/',parameters('subscription'),'/resourceGroups/',parameters('resourceGroupName'),'/providers/Microsoft.Insights/dataCollectionEndpoints/',parameters('workspace'))]",
       "blanks": "[replace('b', 'b', '')]",
@@ -71,7 +71,7 @@
         ],
         "properties": {
           "contentId": "[variables('_dataConnectorContentIdConnectorDefinition1')]",
-          "displayName": "Cisco Meraki (using REST API)",
+          "displayName": "Cisco Meraki Multi Org (using REST API)",
           "contentKind": "DataConnector",
           "mainTemplate": {
             "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
@@ -87,8 +87,8 @@
                 "kind": "Customizable",
                 "properties": {
                   "connectorUiConfig": {
-                    "id": "CiscoMerakiMultiRule",
-                    "title": "Cisco Meraki (using REST API)",
+                    "id": "ciscoMerakiMultiRuleMO",
+                    "title": "Cisco Meraki Multi Org (using REST API)",
                     "publisher": "Microsoft",
                     "descriptionMarkdown": "The [Cisco Meraki](https://aka.ms/ciscomeraki) connector allows you to easily connect your Cisco Meraki organization events (Security events, Configuration Changes and API Requests) to Microsoft Sentinel. The data connector uses the [Cisco Meraki REST API](https://developer.cisco.com/meraki/api-v1/#!get-organization-appliance-security-events) to fetch logs and supports DCR-based [ingestion time transformations](https://docs.microsoft.com/azure/azure-monitor/logs/custom-logs-overview) that parses the received data and ingests into ASIM and custom tables in your Log Analytics workspace. This data connector benefits from capabilities such as DCR based ingestion-time filtering, data normalization.\n\n **Supported ASIM schema:** \n 1. Network Session \n 2. Web Session  \n 3. Audit Event",
                     "graphQueriesTableName": "ASimNetworkSessionLogs",
@@ -252,7 +252,7 @@
                 }
               },
               {
-                "name": "CiscoMerakiMultiRules",
+                "name": "ciscoMerakiMultiRuleMO",
                 "apiVersion": "2022-06-01",
                 "type": "Microsoft.Insights/dataCollectionRules",
                 "location": "[parameters('workspace-location')]",
@@ -569,8 +569,8 @@
         "kind": "Customizable",
         "properties": {
           "connectorUiConfig": {
-            "id": "CiscoMerakiMultiRule",
-            "title": "Cisco Meraki (using REST API)",
+            "id": "ciscoMerakiMultiRuleMO",
+            "title": "Cisco Meraki Multi Org (using REST API)",
             "publisher": "Microsoft",
             "descriptionMarkdown": "The [Cisco Meraki](https://aka.ms/ciscomeraki) connector allows you to easily connect your Cisco Meraki organization events (Security events, Configuration Changes and API Requests) to Microsoft Sentinel. The data connector uses the [Cisco Meraki REST API](https://developer.cisco.com/meraki/api-v1/#!get-organization-appliance-security-events) to fetch logs and supports DCR-based [ingestion time transformations](https://docs.microsoft.com/azure/azure-monitor/logs/custom-logs-overview) that parses the received data and ingests into ASIM and custom tables in your Log Analytics workspace. This data connector benefits from capabilities such as DCR based ingestion-time filtering, data normalization.\n\n **Supported ASIM schema:** \n 1. Network Session \n 2. Web Session  \n 3. Audit Event",
             "graphQueriesTableName": "ASimNetworkSessionLogs",
@@ -766,7 +766,7 @@
         ],
         "properties": {
           "contentId": "[variables('_dataConnectorContentIdConnections1')]",
-          "displayName": "Cisco Meraki (using REST API)",
+          "displayName": "Cisco Meraki Multi Org (using REST API)",
           "contentKind": "ResourcesDataConnector",
           "mainTemplate": {
             "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
@@ -783,7 +783,7 @@
                 "minLength": 1
               },
               "connectorDefinitionName": {
-                "defaultValue": "Cisco Meraki (using REST API)",
+                "defaultValue": "Cisco Meraki Multi Org (using REST API)",
                 "type": "string",
                 "minLength": 1
               },
@@ -837,7 +837,7 @@
                 "location": "[parameters('workspace-location')]",
                 "kind": "RestApiPoller",
                 "properties": {
-                  "connectorDefinitionName": "CiscoMerakiMultiRule",
+                  "connectorDefinitionName": "ciscoMerakiMultiRuleMO",
                   "dataType": "ASimWebSessionLogs",
                   "dcrConfig": {
                     "streamName": "Custom-CiscoMeraki_API",
@@ -885,7 +885,7 @@
                 "location": "[parameters('workspace-location')]",
                 "kind": "RestApiPoller",
                 "properties": {
-                  "connectorDefinitionName": "CiscoMerakiMultiRule",
+                  "connectorDefinitionName": "ciscoMerakiMultiRuleMO",
                   "dataType": "ASimAuditEventLogs",
                   "dcrConfig": {
                     "streamName": "Custom-CiscoMeraki_Configuration",
@@ -933,7 +933,7 @@
                 "location": "[parameters('workspace-location')]",
                 "kind": "RestApiPoller",
                 "properties": {
-                  "connectorDefinitionName": "CiscoMerakiMultiRule",
+                  "connectorDefinitionName": "ciscoMerakiMultiRuleMO",
                   "dataType": "ASimNetworkSessionLogs",
                   "dcrConfig": {
                     "streamName": "Custom-CiscoMeraki_IDS",
@@ -990,7 +990,7 @@
         "apiVersion": "2023-04-01-preview",
         "location": "[parameters('workspace-location')]",
         "properties": {
-          "version": "3.0.2",
+          "version": "3.0.3",
           "kind": "Solution",
           "contentSchemaVersion": "3.0.0",
           "displayName": "Cisco Meraki Events via REST API",
