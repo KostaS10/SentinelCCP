@@ -1,0 +1,1378 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Not used, but needed to pass arm-ttk test `Location-Should-Not-Be-Hardcoded`.  We instead use the `workspace-location` which is derived from the LA workspace"
+            }
+        },
+        "workspace-location": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[concat('Region to deploy solution resources -- separate from location selection',parameters('location'))]"
+            }
+        },
+        "subscription": {
+            "defaultValue": "[last(split(subscription().id, '/'))]",
+            "type": "string",
+            "metadata": {
+                "description": "subscription id where Microsoft Sentinel is setup"
+            }
+        },
+        "resourceGroupName": {
+            "defaultValue": "[resourceGroup().name]",
+            "type": "string",
+            "metadata": {
+                "description": "resource group name where Microsoft Sentinel is setup"
+            }
+        },
+        "workspace": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Workspace name for Log Analytics where Microsoft Sentinel is setup"
+            }
+        }
+    },
+    "variables": {
+        "workspaceResourceId": "[resourceId('microsoft.OperationalInsights/Workspaces', parameters('workspace'))]",
+        "_solutionName": "GitHub",
+        "_solutionVersion": "3.0.0",
+        "_solutionAuthor": "Microsoft",
+        "_packageIcon": "icon icon icon icon",
+        "_solutionId": "azuresentinel.azure-sentinel-solution-azuresentinel.azure-sentinel-BlobExample",
+        "dataConnectorVersionConnectorDefinition": "2.0.0",
+        "dataConnectorVersionConnections": "2.0.0",
+        "_solutionTier": "Community",
+        "_dataConnectorContentIdConnectorDefinition": "GitHubAuditDefinitionV2",
+        "dataConnectorTemplateNameConnectorDefinition": "[concat(parameters('workspace'),'-dc-',uniquestring(variables('_dataConnectorContentIdConnectorDefinition')))]",
+        "_dataConnectorContentIdConnections": "GitHubAuditDefinitionV2Connections",
+        "dataConnectorTemplateNameConnections": "[concat(parameters('workspace'),'-dc-',uniquestring(variables('_dataConnectorContentIdConnections')))]",
+        "_logAnalyticsTableId1": "GitHubAuditLogsV2_CL"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/contentTemplates",
+            "apiVersion": "2023-04-01-preview",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', variables('dataConnectorTemplateNameConnectorDefinition'), variables('dataConnectorVersionConnectorDefinition'))]",
+            "location": "[parameters('workspace-location')]",
+            "dependsOn": [
+                "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/contentPackages', variables('_solutionId'))]"
+            ],
+            "properties": {
+                "contentId": "[variables('_dataConnectorContentIdConnectorDefinition')]",
+                "displayName": "[concat(variables('_solutionName'), variables('dataConnectorTemplateNameConnectorDefinition'))]",
+                "contentKind": "DataConnector",
+                "mainTemplate": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "[variables('dataConnectorVersionConnectorDefinition')]",
+                "parameters": {},
+                "variables": {},
+                    "resources": [
+                        {
+                            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/',concat('DataConnector-', variables('_dataConnectorContentIdConnectorDefinition')))]",
+                            "apiVersion": "2022-01-01-preview",
+                            "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+                            "properties": {
+                                "parentId": "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/dataConnectorDefinitions', variables('_dataConnectorContentIdConnectorDefinition'))]",
+                                "contentId": "[variables('_dataConnectorContentIdConnectorDefinition')]",
+                                "kind": "DataConnector",
+                                "version": "[variables('dataConnectorVersionConnectorDefinition')]",
+                                "source": {
+                                    "sourceId": "[variables('_solutionId')]",
+                                    "name": "[variables('_solutionName')]",
+                                    "kind": "Solution"
+                                },
+                                "author": {
+                                    "name": "[variables('_solutionAuthor')]"
+                                },
+                                "support": {
+                                    "name": "[variables('_solutionAuthor')]",
+                                    "tier": "[variables('_solutionTier')]"
+                                },
+                                "dependencies": {
+                                    "criteria": [
+                                        {
+                                            "version": "[variables('dataConnectorVersionConnections')]",
+                                            "contentId": "[variables('_dataConnectorContentIdConnections')]",
+                                            "kind": "ResourcesDataConnector"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/',variables('_dataConnectorContentIdConnectorDefinition'))]",
+                            "apiVersion": "2022-09-01-preview",
+                            "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectorDefinitions",
+                            "location": "[parameters('workspace-location')]",
+                            "kind": "Customizable",
+                            "properties": {
+                                "connectorUiConfig": {
+                                    "id": "GitHubAuditDefinitionV2",
+                                    "title": "GitHub Enterprise Audit Log (Using Blob Container)",
+                                    "publisher": "Microsoft",
+                                    "descriptionMarkdown": "The GitHub audit log connector provides the capability to ingest GitHub logs into Microsoft Sentinel. By connecting GitHub audit logs into Microsoft Sentinel, you can view this data in workbooks, use it to create custom alerts, and improve your investigation process. \n\n **Note:** If you intended to ingest GitHub subscribed events into Microsoft Sentinel, please refer to GitHub (using BlobStorage) Connector from \"**Data Connectors**\" gallery.",
+                                    "graphQueriesTableName": "GitHubAuditLogsV2_CL",
+                                    "graphQueries": [
+                                        {
+                                            "metricName": "Total events received",
+                                            "legend": "GitHub audit log events",
+                                            "baseQuery": "{{graphQueriesTableName}}"
+                                        }
+                                    ],
+                                    "sampleQueries": [
+                                        {
+                                            "description": "GitHub Audit Logs",
+                                            "query": "{{graphQueriesTableName}}\n | take 10"
+                                        }
+                                    ],
+                                    "dataTypes": [
+                                        {
+                                            "name": "{{graphQueriesTableName}}",
+                                            "lastDataReceivedQuery": "{{graphQueriesTableName}}\n|summarize Time = max(TimeGenerated)\n|where isnotempty(Time)"
+                                        }
+                                    ],
+                                    "connectivityCriteria": [
+                                        {
+                                            "type": "HasDataConnectors",
+                                            "value": null
+                                        }
+                                    ],
+                                    "availability": {
+                                        "status": 1,
+                                        "isPreview": false
+                                    },
+                                    "permissions": {
+                                        "tenant": null,
+                                        "licenses": null,
+                                        "resourceProvider": [
+                                            {
+                                                "provider": "Microsoft.OperationalInsights/workspaces",
+                                                "permissionsDisplayText": "Read and Write permissions are required.",
+                                                "providerDisplayName": "Workspace",
+                                                "scope": "Workspace",
+                                                "requiredPermissions": {
+                                                    "read": true,
+                                                    "write": true,
+                                                    "delete": true,
+                                                    "action": false
+                                                }
+                                            }
+                                        ],
+                                        "customs": [
+                                            {
+                                                "name": "Subscription permissions",
+                                                "description": "You need permissions to create the data flow resources: \n- storage queues (notification queue and dead-letter queue) \n- event grid topic and subscription (to send 'blob created event' notifications to the notification queue) \n- role assignments (to grant access for sentinel app to the blob container and the storage queues.)"
+                                            },
+                                            {
+                                                "name": "Create a storage account and a container",
+                                                "description": "Before setting up a stream in GitHub, first create a storage account and a container in Microsoft Azure. Use [this guide](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) to know more about Container and Blob. Follow the steps in the [documentation](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal) to create an Azure Storage account."
+                                            },
+                                            {   "name": "Generate a Blob SAS URL",
+                                                "description": "Create and Write permissions are required. Refer the [documentation](https://learn.microsoft.com/en-us/azure/ai-services/translator/document-translation/how-to-guides/create-sas-tokens?tabs=Containers) to know more about Blob SAS token and url."
+                                            },
+                                            {
+                                                "name": "Collecting logs from GituHub to your Blob container",
+                                                "description": "Follow the steps in the [documentation](https://docs.github.com/en/enterprise-cloud@latest/admin/monitoring-activity-in-your-enterprise/reviewing-audit-logs-for-your-enterprise/streaming-the-audit-log-for-your-enterprise#setting-up-streaming-to-azure-blob-storage) for collecting logs from GitHub to your Blob container."
+                                            },
+                                            {   "name": "GitHub Enterprise type",
+                                                "description": "This connector will only function with GitHub Enterprise Cloud; it will not support GitHub Enterprise Server."
+                                            }
+                                        ]
+                                    },
+                                    "instructionSteps": [
+                                        {
+                                            "title": "Connect GitHub Audit Blob Container Logs to Microsoft Sentinel",
+                                            "description": "To enable the GitHub Audit logs for Microsoft Sentinel, provide the required information below and click on Connect.\n>",
+                                            "instructions": [
+                                                {
+                                                    "parameters": {
+                                                        "tenantId": "[subscription().tenantId]",
+                                                        "name": "principalId",
+                                                        "appId": "4f05ce56-95b6-4612-9d98-a45c8cc33f9f"
+                                                    },
+                                                    "type": "ServicePrincipalIDTextBox_test"
+                                                },
+                                                {
+                                                    "parameters": {
+                                                        "label": "The Blob container's URL you want to collect data from",
+                                                        "type": "text",
+                                                        "name": "blobContainerUri"
+                                                    },
+                                                    "type": "Textbox"
+                                                },
+                                                {
+                                                    "parameters": {
+                                                        "label": "The Blob container's storage account location",
+                                                        "type": "text",
+                                                        "name": "StorageAccountlocation"
+                                                    },
+                                                    "type": "Textbox"
+                                                },
+                                                {
+                                                    "parameters": {
+                                                        "label": "The Blob container's storage account resource group name",
+                                                        "type": "text",
+                                                        "name": "StorageAccountResourceGroupName"
+                                                    },
+                                                    "type": "Textbox"
+                                                },
+                                                {
+                                                    "parameters": {
+                                                        "label": "The Blob container's storage account subscription id",
+                                                        "type": "text",
+                                                        "name": "StorageAccountSubscription"
+                                                    },
+                                                    "type": "Textbox"
+                                                },
+                                                {
+                                                    "parameters": {
+                                                        "label": "The event grid topic name of the blob container's storage account if exist. else keep empty.",
+                                                        "description": "The data flow using event grid to send 'blob-created event' notifications. There could be only one event grid topic for each storage account.\nGo to your blob container's storage account and look in the 'Events' section. If you already have a topic, please provide it's name. Else, keep the text box empty.",
+                                                        "placeholder": "",
+                                                        "type": "text",
+                                                        "name": "EGSystemTopicName"
+                                                    },
+                                                    "type": "Textbox"
+                                                },
+                                                {
+                                                    "parameters": {
+                                                        "label": "toggle",
+                                                        "name": "toggle"
+                                                    },
+                                                    "type": "ConnectionToggleButton"
+                                                }
+                                            ],
+                                            "innerSteps": null
+                                        }
+                                    ],
+                                    "isConnectivityCriteriasMatchSome": false
+                                }
+                            },
+                            "dependsOn": null
+                        },
+                        {
+                            "name": "GitHubAuditLogsDCR",
+                            "apiVersion": "2021-09-01-preview",
+                            "type": "Microsoft.Insights/dataCollectionRules",
+                            "location": "[parameters('workspace-location')]",
+                            "kind": "Direct",
+                            "properties": {
+                                "streamDeclarations": {
+                                    "Custom-GitHubAuditLogsV2CL": {
+                                        "columns": [
+                                            {
+                                                "name": "TimeGenerated",
+                                                "type": "datetime"
+                                            },
+                                            {
+                                                "name": "org",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "action",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "repo",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "actor",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "actor_location",
+                                                "type": "dynamic"
+                                            },
+                                            {
+                                                "name": "user",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "permission",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "visibility",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "previous_visibility",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "old_permission",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "team",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "blocked_user",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "operation_type",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "public_repo",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "org_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "created_at",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "invitee_email",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "actor_ip",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "@timestamp",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "actor_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "actor_is_bot",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "business_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "repo_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "user_agent",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "user_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "email",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "repository_security_configuration_failure_reason",
+                                                "type": "dynamic"
+                                            },
+                                            {
+                                                "name": "repository_security_configuration_state",
+                                                "type": "dynamic"
+                                            },
+                                            {
+                                                "name": "security_configuration_name",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "oauth_application",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "oauth_application_url",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "oauth_application_state",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "reason",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "membership_type",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "user_can_invite_collaborators",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "can_create_repositories",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "security_configuration_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "invitation_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "topic",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "_document_id",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "business",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "request_category",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "oauth_application_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "old_repo_permission",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "new_repo_permission",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "repositories_removed_names",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "active",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "active_was",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "data",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "config",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "config_was",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "content_type",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "deploy_key_fingerprint",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "emoji",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "events",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "events_were",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "explanation",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "fingerprint",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "hook_id",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "limited_availability",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "message",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "name",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "old_user",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "openssh_public_key",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "read_only",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "repository",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "repository_public",
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "name": "target_login",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "name": "transport_protocol",
+                                                "type": "real"
+                                            },
+                                            {
+                                                "name": "transport_protocol_name",
+                                                "type": "string"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "destinations": {
+                                    "logAnalytics": [
+                                        {
+                                            "workspaceResourceId": "[variables('workspaceResourceId')]",
+                                            "name": "clv2ws1"
+                                        }
+                                    ]
+                                },
+                                "dataFlows": [
+                                    {
+                                        "streams": [
+                                            "Custom-GitHubAuditLogsV2CL"
+                                        ],
+                                        "destinations": [
+                                            "clv2ws1"
+                                        ],
+                                        "transformKql": "source | extend actor_locationDynamic = parse_json(actor_location) | extend CountryCode = tostring(actor_locationDynamic['country_code']) | extend CountryName = tostring(actor_locationDynamic['country_name']) | extend City = tostring(actor_locationDynamic['city']) | project-rename Timestamp = ['@timestamp'], CreatedAt = created_at, Org = org, Action = action, Repo = repo, Actor = actor, User = user, Permission = permission, Visibility = visibility, PreviousVisibility = previous_visibility, OldPermission = old_permission, Team = team, BlockedUser = blocked_user, OperationType = operation_type, PublicRepo = public_repo, OrgId = org_id, InviteeEmail = invitee_email, ActorIp = actor_ip, ActorId = actor_id, ActorIsBot = actor_is_bot, BusinessId = business_id, RepoId = repo_id, UserAgent = user_agent, UserId = user_id, Email = email, RepositorySecurityConfigurationFailureReason = repository_security_configuration_failure_reason, RepositorySecurityConfigurationState = repository_security_configuration_state, SecurityConfigurationName = security_configuration_name, OauthApplication = oauth_application, OauthApplicationUrl = oauth_application_url, OauthApplicationState = oauth_application_state, Reason = reason, MembershipType = membership_type, UserCanInviteCollaborators = user_can_invite_collaborators, CanCreateRepositories = can_create_repositories, SecurityConfigurationId = security_configuration_id, InvitationId = invitation_id, Topic = topic, DocumentId = _document_id, Business = business, RequestCategory = request_category, OauthApplicationId = oauth_application_id, OldRepoPermission = old_repo_permission, NewRepoPermission = new_repo_permission, RepositoriesRemovedNames = repositories_removed_names, Active = active, ActiveWas = active_was, Data = data, Config = config, ConfigWas = config_was, ContentType = content_type, DeployKeyFingerprint = deploy_key_fingerprint, Emoji = emoji, Events = events, EventsWere = events_were, Explanation = explanation, Fingerprint = fingerprint, HookId = hook_id, LimitedAvailability = limited_availability, Message = message, Name = name, OldUser = old_user, OpensshPublicKey = openssh_public_key, ReadOnly = read_only, Repository = repository, RepositoryPublic = repository_public, TargetLogin = target_login, TransportProtocol = transport_protocol, TransportProtocolName = transport_protocol_name",
+                                        "outputStream": "Custom-GitHubAuditLogsV2_CL"
+                                    }
+                                ],
+                                "dataCollectionEndpointId": "[concat('/subscriptions/',parameters('subscription'),'/resourceGroups/',parameters('resourceGroupName'),'/providers/Microsoft.Insights/dataCollectionEndpoints/',parameters('workspace'))]"
+                            },
+                            "dependsOn": null
+                        },
+                        {
+                            "name": "[variables('_logAnalyticsTableId1')]",
+                            "apiVersion": "2021-03-01-privatepreview",
+                            "type": "Microsoft.OperationalInsights/workspaces/tables",
+                            "location": "[parameters('workspace-location')]",
+                            "kind": null,
+                            "properties": {
+                                "schema": {
+                                    "name": "[variables('_logAnalyticsTableId1')]",
+                                    "columns": [
+                                        {
+                                            "name": "TimeGenerated",
+                                            "type": "datetime"
+                                        },
+                                        {
+                                            "name": "Org",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Action",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Repo",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Actor",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "User",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Permission",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Visibility",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "PreviousVisibility",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OldPermission",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Team",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "BlockedUser",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OperationType",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "PublicRepo",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "OrgId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "CreatedAt",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "InviteeEmail",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ActorIp",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Timestamp",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "ActorId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "ActorIsBot",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "BusinessId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "RepoId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "UserAgent",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "UserId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "Email",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "RepositorySecurityConfigurationFailureReason",
+                                            "type": "dynamic"
+                                        },
+                                        {
+                                            "name": "RepositorySecurityConfigurationState",
+                                            "type": "dynamic"
+                                        },
+                                        {
+                                            "name": "SecurityConfigurationName",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OauthApplication",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OauthApplicationUrl",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OauthApplicationState",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Reason",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "MembershipType",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "UserCanInviteCollaborators",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "CanCreateRepositories",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "CountryCode",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "CountryName",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "City",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "SecurityConfigurationId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "InvitationId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "Topic",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "DocumentId",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Business",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "RequestCategory",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OauthApplicationId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "OldRepoPermission",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "NewRepoPermission",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "RepositoriesRemovedNames",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Active",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "ActiveWas",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "Data",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Config",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ConfigWas",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ContentType",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "DeployKeyFingerprint",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Emoji",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Events",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "EventsWere",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Explanation",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Fingerprint",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "HookId",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "LimitedAvailability",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "Message",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "Name",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OldUser",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "OpensshPublicKey",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ReadOnly",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "Repository",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "RepositoryPublic",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "TargetLogin",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "TransportProtocol",
+                                            "type": "real"
+                                        },
+                                        {
+                                            "name": "TransportProtocolName",
+                                            "type": "string"
+                                        }
+                                    ]
+                                }
+                            },
+                            "dependsOn": null
+                        }
+                    ]
+                },
+                "packageKind": "Solution",
+                "packageVersion": "[variables('_solutionVersion')]",
+                "packageName": "[variables('_solutionName')]",
+                "contentProductId": "[concat(substring(variables('_solutionId'), 0, 50),'-','dc','-', uniqueString(concat(variables('_solutionId'),'-','DataConnector','-',variables('_dataConnectorContentIdConnectorDefinition'),'-', variables('dataConnectorVersionConnectorDefinition'))))]",
+                "packageId": "[variables('_solutionId')]",
+                "contentSchemaVersion": "3.0.0",
+                "version": "[variables('_solutionVersion')]"
+            }
+        },
+        {
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/',variables('_dataConnectorContentIdConnectorDefinition'))]",
+            "apiVersion": "2022-09-01-preview",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectorDefinitions",
+            "location": "[parameters('workspace-location')]",
+            "kind": "Customizable",
+            "properties": {
+                "connectorUiConfig": {
+                    "id": "GitHubAuditDefinitionV2",
+                    "title": "GitHub Enterprise Audit Log (Using Blob Container)",
+                    "publisher": "Microsoft",
+                    "descriptionMarkdown": "The GitHub audit log connector provides the capability to ingest GitHub logs into Microsoft Sentinel. By connecting GitHub audit logs into Microsoft Sentinel, you can view this data in workbooks, use it to create custom alerts, and improve your investigation process. \n\n **Note:** If you intended to ingest GitHub subscribed events into Microsoft Sentinel, please refer to GitHub (using BlobStorage) Connector from \"**Data Connectors**\" gallery.",
+                    "graphQueriesTableName": "GitHubAuditLogsV2_CL",
+                    "graphQueries": [
+                        {
+                            "metricName": "Total events received",
+                            "legend": "GitHub audit log events",
+                            "baseQuery": "{{graphQueriesTableName}}"
+                        }
+                    ],
+                    "sampleQueries": [
+                        {
+                            "description": "GitHub Audit Logs",
+                            "query": "{{graphQueriesTableName}}\n | take 10"
+                        }
+                    ],
+                    "dataTypes": [
+                        {
+                            "name": "{{graphQueriesTableName}}",
+                            "lastDataReceivedQuery": "{{graphQueriesTableName}}\n|summarize Time = max(TimeGenerated)\n|where isnotempty(Time)"
+                        }
+                    ],
+                    "connectivityCriteria": [
+                        {
+                            "type": "HasDataConnectors",
+                            "value": null
+                        }
+                    ],
+                    "availability": {
+                        "status": 1,
+                        "isPreview": false
+                    },
+                    "permissions": {
+                        "tenant": null,
+                        "licenses": null,
+                        "resourceProvider": [
+                            {
+                                "provider": "Microsoft.OperationalInsights/workspaces",
+                                "permissionsDisplayText": "Read and Write permissions are required.",
+                                "providerDisplayName": "Workspace",
+                                "scope": "Workspace",
+                                "requiredPermissions": {
+                                    "read": true,
+                                    "write": true,
+                                    "delete": true,
+                                    "action": false
+                                }
+                            }
+                        ],
+                        "customs": [
+                            {
+                                "name": "Subscription permissions",
+                                "description": "You need permissions to create the data flow resources: \n- Storage queues (notification queue and dead-letter queue) \n- Event grid topic and subscription (to send 'blob created event' notifications to the notification queue) \n- Role assignments (to grant access for sentinel app to the blob container and the storage queues.)"
+                            },
+                            {
+                                "name": "Create a storage account and a container",
+                                "description": "Before setting up a stream in GitHub, first create a storage account and a container in Microsoft Azure. Use [this guide](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) to know more about Container and Blob. Follow the steps in the [documentation](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal) to create an Azure Storage account."
+                            },
+                            {   "name": "Generate a Blob SAS URL",
+                                "description": "Create and Write permissions are required. Refer the [documentation](https://learn.microsoft.com/en-us/azure/ai-services/translator/document-translation/how-to-guides/create-sas-tokens?tabs=Containers) to know more about Blob SAS token and url."
+                            },
+                            {
+                                "name": "Collecting logs from GituHub to your Blob container",
+                                "description": "Follow the steps in the [documentation](https://docs.github.com/en/enterprise-cloud@latest/admin/monitoring-activity-in-your-enterprise/reviewing-audit-logs-for-your-enterprise/streaming-the-audit-log-for-your-enterprise#setting-up-streaming-to-azure-blob-storage) for collecting logs from GitHub to your Blob container."
+                            },
+                            {   "name": "GitHub Enterprise type",
+                                "description": "This connector will only function with GitHub Enterprise Cloud; it will not support GitHub Enterprise Server."
+                            }
+                        ]
+                    },
+                    "instructionSteps": [
+                        {
+                            "title": "Connect GitHub Audit Blob Container Logs to Microsoft Sentinel",
+                            "description": "To enable the GitHub Audit logs for Microsoft Sentinel, provide the required information below and click on Connect.\n>",
+                            "instructions": [
+                                {
+                                    "parameters": {
+                                        "tenantId": "[subscription().tenantId]",
+                                        "name": "principalId",
+                                        "appId": "4f05ce56-95b6-4612-9d98-a45c8cc33f9f"
+                                    },
+                                    "type": "ServicePrincipalIDTextBox_test"
+                                },
+                                {
+                                    "parameters": {
+                                        "label": "The Blob container's URL you want to collect data from",
+                                        "type": "text",
+                                        "name": "blobContainerUri"
+                                    },
+                                    "type": "Textbox"
+                                },
+                                {
+                                    "parameters": {
+                                        "label": "The Blob container's storage account location",
+                                        "type": "text",
+                                        "name": "StorageAccountlocation"
+                                    },
+                                    "type": "Textbox"
+                                },
+                                {
+                                    "parameters": {
+                                        "label": "The Blob container's storage account resource group name",
+                                        "type": "text",
+                                        "name": "StorageAccountResourceGroupName"
+                                    },
+                                    "type": "Textbox"
+                                },
+                                {
+                                    "parameters": {
+                                        "label": "The Blob container's storage account subscription id",
+                                        "type": "text",
+                                        "name": "StorageAccountSubscription"
+                                    },
+                                    "type": "Textbox"
+                                },
+                                {
+                                    "parameters": {
+                                        "label": "The event grid topic name of the blob container's storage account if exist. else keep empty.",
+                                        "description": "The data flow using event grid to send 'blob-created event' notifications. There could be only one event grid topic for each storage account.\nGo to your blob container's storage account and look in the 'Events' section. If you already have a topic, please provide it's name. Else, keep the text box empty.",
+                                        "placeholder": "",
+                                        "type": "text",
+                                        "name": "EGSystemTopicName"
+                                    },
+                                    "type": "Textbox"
+                                },
+                                {
+                                    "parameters": {
+                                        "label": "toggle",
+                                        "name": "toggle"
+                                    },
+                                    "type": "ConnectionToggleButton"
+                                }
+                            ],
+                            "innerSteps": null
+                        }
+                    ],
+                    "isConnectivityCriteriasMatchSome": false
+                }
+            },
+            "dependsOn": null
+        },
+        {
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/',concat('DataConnector-', variables('_dataConnectorContentIdConnectorDefinition')))]",
+            "apiVersion": "2022-01-01-preview",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+            "properties": {
+                "parentId": "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/dataConnectorDefinitions', variables('_dataConnectorContentIdConnectorDefinition'))]",
+                "contentId": "[variables('_dataConnectorContentIdConnectorDefinition')]",
+                "kind": "DataConnector",
+                "version": "[variables('dataConnectorVersionConnectorDefinition')]",
+                "source": {
+                    "sourceId": "[variables('_solutionId')]",
+                    "name": "[variables('_solutionName')]",
+                    "kind": "Solution"
+                },
+                "author": {
+                    "name": "[variables('_solutionAuthor')]"
+                },
+                "support": {
+                    "name": "[variables('_solutionAuthor')]",
+                    "tier": "[variables('_solutionTier')]"
+                },
+                "dependencies": {
+                    "criteria": [
+                        {
+                            "version": "[variables('dataConnectorVersionConnections')]",
+                            "contentId": "[variables('_dataConnectorContentIdConnections')]",
+                            "kind": "ResourcesDataConnector"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/contentTemplates",
+            "apiVersion": "2023-04-01-preview",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', variables('dataConnectorTemplateNameConnections'), variables('dataConnectorVersionConnections'))]",
+            "location": "[parameters('workspace-location')]",
+            "dependsOn": [
+                "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/contentPackages', variables('_solutionId'))]"
+            ],
+            "properties": {
+                "contentId": "[variables('_dataConnectorContentIdConnections')]",
+                "displayName": "[concat(variables('_solutionName'), variables('dataConnectorTemplateNameConnections'))]",
+                "contentKind": "ResourcesDataConnector",
+                "mainTemplate": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "[variables('dataConnectorVersionConnections')]",
+                    "parameters": {
+                        "connectorDefinitionName": {
+                            "defaultValue": "connectorDefinitionName",
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "workspaceName": {
+                            "defaultValue": "[parameters('workspace')]",
+                            "type": "string"
+                        },
+                        "dcrConfig": {
+                            "defaultValue": {
+                                "dataCollectionEndpoint": "data collection Endpoint",
+                                "dataCollectionRuleImmutableId": "data collection rule immutableId"
+                            },
+                            "type": "object"
+                        },
+                        "principalId": {
+                            "defaultValue": "principalId",
+                            "type": "string"
+                        },
+                        "blobContainerUri": {
+                            "defaultValue": "blobContainerUri",
+                            "type": "string"
+                        },
+                        "StorageAccountlocation": {
+                            "defaultValue": "StorageAccountlocation",
+                            "type": "string"
+                        },
+                        "StorageAccountResourceGroupName": {
+                            "defaultValue": "StorageAccountResourceGroupName",
+                            "type": "string"
+                        },
+                        "StorageAccountSubscription": {
+                            "defaultValue": "StorageAccountSubscription",
+                            "type": "string"
+                        },
+                        "EGSystemTopicName": {
+                            "defaultValue": "",
+                            "type": "string"
+                        }
+                    },
+                    "variables": {
+                        "_dataConnectorContentIdConnections": "[variables('_dataConnectorContentIdConnections')]",
+                        "connectorName": "blob-example-26-12",
+                        "storageAccountName": "[[split(split(parameters('blobContainerUri'), 'https://')[1], '.blob.core.windows.net')[0]]",
+                        "blobContainerName": "[[split(split(parameters('blobContainerUri'), '.blob.core.windows.net/')[1], '/')[0]]",
+                        "queueName": "[[concat(variables('connectorName'), '-notification')]",
+                        "dlqName": "[[concat(variables('connectorName'), '-dlq')]",
+                        "ResourcesIdPrefix": "[[format('/subscriptions/{0}/resourceGroups/{1}/providers', parameters('StorageAccountSubscription'), parameters('StorageAccountResourceGroupName'))]",
+                        "storageAccountId": "[[format('{0}/Microsoft.Storage/storageAccounts/{1}', variables('ResourcesIdPrefix'), variables('storageAccountName'))]",
+                        "notificationQueueResourceId": "[[format('{0}/Microsoft.Storage/storageAccounts/{1}/queueServices//default/queues/{2}', variables('ResourcesIdPrefix'), variables('storageAccountName'), variables('queueName'))]",
+                        "dlqResourceId": "[[format('{0}/Microsoft.Storage/storageAccounts/{1}/queueServices//default/queues/{2}', variables('ResourcesIdPrefix'), variables('storageAccountName'), variables('dlqName'))]",
+                        "EGSystemTopicDefaultName": "[[format('eg-system-topic-{0}-{1}', variables('connectorName'), parameters('workspaceName'))]",
+                        "EGSystemTopicName": "[[if(empty(parameters('EGSystemTopicName')), variables('EGSystemTopicDefaultName'), parameters('EGSystemTopicName'))]",
+                        "EGTopicResourceId": "[[format('{0}/Microsoft.EventGrid/systemTopics/{1}', variables('ResourcesIdPrefix'), variables('EGSystemTopicName'))]",
+                        "EgSubscriptionName": "[[format('{0}-{1}', variables('connectorName'), 'blobcreatedevents')]",
+                        "EgSubscriptionResourceId": "[[format('{0}/Microsoft.EventGrid/systemTopics/{1}/eventSubscriptions/{2}', variables('ResourcesIdPrefix'), variables('EGSystemTopicName'), variables('EgSubscriptionName'))]",
+                        "storageBlobContributorRoleId": "[[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('StorageAccountSubscription'))]",
+                        "storageQueueContributorRoleId": "[[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/974c5e8b-45b9-4653-ba55-5f855dd0fb88', parameters('StorageAccountSubscription'))]",
+                        "blobRaGuid": "[[guid(variables('storageAccountName'), variables('blobContainerName'))]",
+                        "notificationQueueRaGuid": "[[guid(variables('storageAccountName'), variables('queueName'))]",
+                        "dlqRaGuid": "[[guid(variables('storageAccountName'), variables('dlqName'))]",
+                        "blobRoleAssignmentResourceId": "[[format('{0}/Microsoft.Storage/storageAccounts/{1}/blobServices/default/containers/{2}/providers/Microsoft.Authorization/roleAssignments/{3}', variables('ResourcesIdPrefix'), variables('storageAccountName'), variables('blobContainerName'),variables('blobRaGuid'))]",
+                        "notificationQueueRoleAssignmentResourceId": "[[format('{0}/Microsoft.Storage/storageAccounts/{1}/queueServices/default/queues/{2}/providers/Microsoft.Authorization/roleAssignments/{3}', variables('ResourcesIdPrefix'), variables('storageAccountName'), variables('queueName'),variables('notificationQueueRaGuid'))]",
+                        "dlqRoleAssignmentResourceId": "[[format('{0}/Microsoft.Storage/storageAccounts/{1}/queueServices/default/queues/{2}/providers/Microsoft.Authorization/roleAssignments/{3}', variables('ResourcesIdPrefix'), variables('storageAccountName'), variables('dlqName'),variables('dlqRaGuid'))]",
+                        "nestedDeploymentName": "CreateDataFlowResources",
+                        "nestedDeploymentId": "[[format('{0}/Microsoft.Resources/deployments/{1}', variables('ResourcesIdPrefix'), variables('nestedDeploymentName'))]"
+                    },
+                    "resources": [
+                        {
+                            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/',concat('DataConnector-', variables('_dataConnectorContentIdConnections')))]",
+                            "apiVersion": "2022-01-01-preview",
+                            "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+                            "properties": {
+                                "parentId": "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/dataConnectors', variables('_dataConnectorContentIdConnections'))]",
+                                "contentId": "[variables('_dataConnectorContentIdConnections')]",
+                                "kind": "ResourcesDataConnector",
+                                "version": "[variables('dataConnectorVersionConnections')]",
+                                "source": {
+                                    "sourceId": "[variables('_solutionId')]",
+                                    "name": "[variables('_solutionName')]",
+                                    "kind": "Solution"
+                                },
+                                "author": {
+                                    "name": "[variables('_solutionAuthor')]"
+                                },
+                                "support": {
+                                    "name": "[variables('_solutionAuthor')]",
+                                    "tier": "[variables('_solutionTier')]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Resources/deployments",
+                            "apiVersion": "2021-04-01",
+                            "name": "[[variables('nestedDeploymentName')]",
+                            "properties": {
+                                "mode": "Incremental",
+                                "template": {
+                                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                                    "contentVersion": "1.0.0.0",
+                                    "resources": [
+                                        {
+                                            "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+                                            "apiVersion": "2021-04-01",
+                                            "name": "[[concat(variables('storageAccountName'), '/default/', variables('queueName'))]",
+                                        "dependsOn": [],
+                                        "properties": {}
+                                        },
+                                        {
+                                            "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+                                            "apiVersion": "2021-04-01",
+                                            "name": "[[concat(variables('storageAccountName'), '/default/', variables('dlqName'))]",
+                                        "dependsOn": [],
+                                        "properties": {}
+                                        },
+                                        {
+                                            "type": "Microsoft.EventGrid/systemTopics",
+                                            "apiVersion": "2022-06-15",
+                                            "name": "[[variables('EGSystemTopicName')]",
+                                            "location": "[[parameters('StorageAccountLocation')]",
+                                            "properties": {
+                                                "provisioningState": "Succeeded",
+                                                "source": "[[variables('storageAccountId')]",
+                                                "topicType": "microsoft.storage.storageaccounts",
+                                                "metricResourceId": "0cefe8d9-3269-4f68-a44e-46a4fc26e4a9"
+                                            },
+                                            "condition": "[[empty(parameters('EGSystemTopicName'))]"
+                                        },
+                                        {
+                                            "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
+                                            "apiVersion": "2023-12-15-preview",
+                                            "name": "[[format('{0}/{1}', variables('EGSystemTopicName'), variables('EgSubscriptionName'))]",
+                                            "dependsOn": [
+                                                "[[variables('EGTopicResourceId')]",
+                                                "[[variables('notificationQueueResourceId')]"
+                                            ],
+                                            "properties": {
+                                                "destination": {
+                                                    "endpointType": "StorageQueue",
+                                                    "properties": {
+                                                        "queueName": "[[variables('queueName')]",
+                                                        "resourceId": "[[variables('storageAccountId')]"
+                                                    }
+                                                },
+                                                "filter": {
+                                                    "includedEventTypes": [
+                                                        "Microsoft.Storage.BlobCreated"
+                                                    ],
+                                                    "subjectBeginsWith": "[[format('{0}/{1}', '/blobServices/default/containers', variables('blobContainerName'))]"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "type": "Microsoft.Storage/storageAccounts/blobServices/containers/providers/roleAssignments",
+                                            "apiVersion": "2018-01-01-preview",
+                                            "name": "[[concat(variables('storageAccountName'), '/default/', variables('blobContainerName'), '/Microsoft.Authorization/', variables('blobRaGuid'))]",
+                                            "properties": {
+                                                "roleDefinitionId": "[[variables('storageBlobContributorRoleId')]",
+                                                "principalId": "[[parameters('principalId')]"
+                                            }
+                                        },
+                                        {
+                                            "type": "Microsoft.Storage/storageAccounts/queueServices/queues/providers/roleAssignments",
+                                            "apiVersion": "2018-01-01-preview",
+                                            "name": "[[concat(variables('storageAccountName'), '/default/', variables('queueName'), '/Microsoft.Authorization/',  variables('notificationQueueRaGuid'))]",
+                                            "dependsOn": [
+                                                "[[variables('notificationQueueResourceId')]"
+                                            ],
+                                            "properties": {
+                                                "roleDefinitionId": "[[variables('storageQueueContributorRoleId')]",
+                                                "principalId": "[[parameters('principalId')]"
+                                            }
+                                        },
+                                        {
+                                            "type": "Microsoft.Storage/storageAccounts/queueServices/queues/providers/roleAssignments",
+                                            "apiVersion": "2018-01-01-preview",
+                                            "name": "[[concat(variables('storageAccountName'), '/default/', variables('dlqName'), '/Microsoft.Authorization/', variables('dlqRaGuid'))]",
+                                            "dependsOn": [
+                                                "[[variables('dlqResourceId')]"
+                                            ],
+                                            "properties": {
+                                                "roleDefinitionId": "[[variables('storageQueueContributorRoleId')]",
+                                                "principalId": "[[parameters('principalId')]"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "subscriptionId": "[[parameters('StorageAccountSubscription')]",
+                            "resourceGroup": "[[parameters('StorageAccountResourceGroupName')]"
+                        },
+                        {
+                            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', 'GitHub')]",
+                            "apiVersion": "2022-12-01-preview",
+                            "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
+                            "location": "[parameters('workspace-location')]",
+                            "kind": "StorageAccountBlobContainer",
+                            "properties": {
+                                "connectorDefinitionName": "[[parameters('connectorDefinitionName')]",
+                                "dcrConfig": {
+                                    "streamName": "Custom-GitHubAuditLogsV2CL",
+                                    "dataCollectionEndpoint": "[[parameters('dcrConfig').dataCollectionEndpoint]",
+                                    "dataCollectionRuleImmutableId": "[[parameters('dcrConfig').dataCollectionRuleImmutableId]"
+                                },
+                                "auth": {
+                                    "type": "ServicePrincipal"
+                                },
+                                "request": {
+                                    "QueueUri": "[[concat('https://', variables('storageAccountName'), '.queue.core.windows.net/', variables('queueName'))]",
+                                    "DlqUri": "[[concat('https://', variables('storageAccountName'), '.queue.core.windows.net/', variables('dlqName'))]"
+                                },
+                                "response": {
+                                    "eventsJsonPaths": [
+                                        "$"
+                                    ],
+                                    "format": "json",
+                                    "isGzipCompressed": true
+                                }
+                            },
+                            "dependsOn": [
+                                "[[variables('nestedDeploymentId')]"
+                            ]
+                        }
+                    ]
+                },
+                "packageKind": "Solution",
+                "packageVersion": "[variables('_solutionVersion')]",
+                "packageName": "[variables('_solutionName')]",
+                "contentProductId": "[concat(substring(variables('_solutionId'), 0, 50),'-','rdc','-', uniqueString(concat(variables('_solutionId'),'-','ResourcesDataConnector','-',variables('_dataConnectorContentIdConnections'),'-', variables('dataConnectorVersionConnections'))))]",
+                "packageId": "[variables('_solutionId')]",
+                "contentSchemaVersion": "3.0.0",
+                "version": "[variables('_solutionVersion')]"
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', variables('_solutionId'))]",
+            "location": "[parameters('workspace-location')]",
+            "apiVersion": "2023-04-01-preview",
+            "properties": {
+                "version": "[variables('_solutionVersion')]",
+                "kind": "Solution",
+                "contentSchemaVersion": "3.0.0",
+                "contentId": "[variables('_solutionId')]",
+                "source": {
+                    "kind": "Solution",
+                    "name": "[variables('_solutionName')]",
+                    "sourceId": "[variables('_solutionId')]"
+                },
+                "author": {
+                    "name": "[variables('_solutionAuthor')]"
+                },
+                "support": {
+                    "name": "[variables('_solutionAuthor')]"
+                },
+                "dependencies": {
+                    "operator": "AND",
+                    "criteria": [
+                        {
+                            "kind": "DataConnector",
+                            "contentId": "[variables('dataConnectorVersionConnectorDefinition')]",
+                            "version": "[variables('_dataConnectorContentIdConnectorDefinition')]"
+                        }
+                    ]
+                },
+                "firstPublishDate": "2022-06-24",
+                "providers": [
+                    "[variables('_solutionAuthor')]"
+                ],
+                "contentKind": "Solution",
+                "packageId": "[variables('_solutionId')]",
+                "contentProductId": "[concat(substring(variables('_solutionId'), 0, 50),'-','sl','-', uniqueString(concat(variables('_solutionId'),'-','Solution','-',variables('_solutionId'),'-', variables('_solutionVersion'))))]",
+                "displayName": "[variables('_solutionName')]",
+                "publisherDisplayName": "[variables('_solutionId')]",
+                "descriptionHtml": "test",
+                "icon": "[variables('_packageIcon')]"
+            }
+        }
+    ]
+}
