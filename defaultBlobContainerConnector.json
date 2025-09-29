@@ -425,7 +425,7 @@
                     "variables": {
                         "_dataConnectorContentIdConnections": "[variables('_dataConnectorContentIdConnections')]",
                         "dataConnectorContentIdConnectorDefinition": "[variables('_dataConnectorContentIdConnectorDefinition')]",
-                        "connectorName": "systemtopic-default",
+                        "connectorName": "default",
                         "connectorTitleSanitized": "[variables('connectorTitleSanitized')]",
                         "connectorTitleMax50CharSanitized": "[variables('connectorTitleMax50CharSanitized')]",
                         "storageAccountName": "[[split(split(parameters('blobContainerUri'), 'https://')[1], '.blob.core.windows.net')[0]]",
