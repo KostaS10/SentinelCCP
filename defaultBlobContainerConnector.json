@@ -37,15 +37,61 @@
             "metadata": {
                 "description": "Workspace name for Log Analytics where Microsoft Sentinel is setup"
             }
+        },
+        "connectorTitle": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Display name for the connector"
+            }
+        },
+        "connectorTitleMax25Char": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Short connector name used for naming supporting resources - max 25 characters"
+            }
+        },
+        "tableName": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Table name to store ingested data, need to end with _CL"
+            }
+        },
+        "logFormat": {
+            "defaultValue": "json",
+            "allowedValues": [
+                "json",
+                "csv"
+            ],
+            "type": "string",
+            "metadata": {
+                "description": "Format of the logs in the blob storage - json or csv"
+            }
+        },
+        "gzipCompression": {
+            "defaultValue": false,
+            "type": "bool",
+            "metadata": {
+                "description": "Format of the logs in the blob storage - json or csv"
+            }
+        },
+        "solutionAuthor": {
+            "defaultValue": "Community",
+            "type": "string",
+            "metadata": {
+                "description": "Author of the solution"
+            }
         }
     },
     "variables": {
-        "connectorTitle": "Default Example BlobStorage Connector",
-        "connectorTitleMax25Char": "DefaultBlobStorageCCF",
-        "_logAnalyticsTableId1": "defaultTable_CL",
-        "logFormat": "json",
-        "isGzipCompressed": false,
-        "_solutionAuthor": "Microsoft",
+        "connectorTitle": "[parameters('connectorTitle')]",
+        "connectorTitleMax25Char": "[parameters('connectorTitleMax25Char')]",
+        "_logAnalyticsTableId1": "[parameters('tableName')]",
+        "logFormat": "[toLower(parameters('logFormat'))]",
+        "isGzipCompressed": "[parameters('gzipCompression')]",
+        "_solutionAuthor": "[parameters('solutionAuthor')]",
         "connectorTitleMax25CharSanitized": "[take(toLower(replace(variables('connectorTitleMax25Char'),' ','')),25)]",
         "connectorTitleSanitized": "[replace(variables('connectorTitle'),' ','')]",
         "workspaceResourceId": "[resourceId('microsoft.OperationalInsights/Workspaces', parameters('workspace'))]",
