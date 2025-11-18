@@ -5,7 +5,7 @@ Instructions on how to use the connector:
 2. Click edit template and configure the following:
   - Starting from line 171, define the columns of the data stored in BlobStorage
   - Line 203, configure transformKql line if you need any additoinal transformation with the data
-  - Startign from line 220, define the table schema of that custom table where data will be stored
+  - Starting from line 220, define the table schema of that custom table where data will be stored
 3. Define the parameters:
   - Select subscription, RG and region where you want to deploy the connector
   - workspace-location parameter defines the location
