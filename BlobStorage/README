@@ -1,2 +1,21 @@
 Instructions on how to use the connector:
 
+
+1. Deploy the template in Azure with "Deploy a custom template" option in Azure
+2. Click edit template and configure the following:
+  - Starting from line 171, define the columns of the data stored in BlobStorage
+  - Line 203, configure transformKql line if you need any additoinal transformation with the data
+  - Startign from line 220, define the table schema of that custom table where data will be stored
+3. Define the parameters:
+  - Select subscription, RG and region where you want to deploy the connector
+  - workspace-location parameter defines the location
+  - Workspace - provide workspace name
+  - Connector title - provide title for your connector
+  - Connector Title Max25Char - provide short name for connector (up to 25 characters)
+  - Table Name - provide custom table name where the data will be stored (needs to end with _CL)
+  - Log format - select either CSV or JSON depending on how data is stored in BlobStorage
+  - Gzip compression - select whether data stored in BlobStorage is compressed with gzip or not
+
+
+
+
