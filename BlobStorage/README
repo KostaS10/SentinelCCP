@@ -1,4 +1,4 @@
-Instructions on how to use the connector:
+# Instructions on how to use the connector:
 
 
 1. Deploy the template in Azure with "Deploy a custom template" option in Azure
@@ -15,6 +15,8 @@ Instructions on how to use the connector:
   - Table Name - provide custom table name where the data will be stored (needs to end with _CL)
   - Log format - select either CSV or JSON depending on how data is stored in BlobStorage
   - Gzip compression - select whether data stored in BlobStorage is compressed with gzip or not
+
+# Instructions on how to deploy and connect the connector
 
 
 
